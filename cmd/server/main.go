@@ -15,6 +15,10 @@ import (
 func main() {
 	cfg := config.Load()
 
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("invalid configuration: %v", err)
+	}
+
 	database, err := db.Connect(cfg)
 	if err != nil {
 		log.Fatalf("cannot connect to database: %v", err)

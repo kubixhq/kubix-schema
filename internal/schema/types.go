@@ -40,9 +40,14 @@ type MigrationHistory struct {
 }
 
 type ColumnChange struct {
-	Name    string `json:"name"`
-	OldType string `json:"old_type"`
-	NewType string `json:"new_type"`
+	Name           string  `json:"name"`
+	OldType        string  `json:"old_type,omitempty"`
+	NewType        string  `json:"new_type,omitempty"`
+	OldNullable    *bool   `json:"old_nullable,omitempty"` // non-nil only when nullability changed
+	NewNullable    *bool   `json:"new_nullable,omitempty"`
+	DefaultChanged bool    `json:"default_changed,omitempty"`
+	OldDefault     *string `json:"old_default,omitempty"` // nil means no default was set
+	NewDefault     *string `json:"new_default,omitempty"`
 }
 
 type TableDiff struct {

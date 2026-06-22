@@ -16,6 +16,9 @@ func LoadSnapshot(db *sql.DB, version, snapshotDir string) (*ERD, error) {
 	if version == "current" {
 		return ExtractERD(db)
 	}
+	if err := os.MkdirAll(snapshotDir, 0755); err != nil {
+		return nil, fmt.Errorf("cannot create snapshot dir: %w", err)
+	}
 	path := filepath.Join(snapshotDir, sanitizeFilename(version)+".json")
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -33,6 +36,9 @@ func LoadSnapshot(db *sql.DB, version, snapshotDir string) (*ERD, error) {
 
 // SaveSnapshot writes an ERD snapshot to disk under snapshotDir/<version>.json.
 func SaveSnapshot(erd *ERD, version, snapshotDir string) error {
+	if err := os.MkdirAll(snapshotDir, 0755); err != nil {
+		return fmt.Errorf("cannot create snapshot dir: %w", err)
+	}
 	data, err := json.MarshalIndent(erd, "", "  ")
 	if err != nil {
 		return err
@@ -117,12 +123,8 @@ func diffTable(from, to Table) *TableDiff {
 		if !ok {
 			continue
 		}
-		if fromCol.Type != toCol.Type {
-			td.ModifiedColumns = append(td.ModifiedColumns, ColumnChange{
-				Name:    name,
-				OldType: fromCol.Type,
-				NewType: toCol.Type,
-			})
+		if cc := diffColumn(fromCol, toCol); cc != nil {
+			td.ModifiedColumns = append(td.ModifiedColumns, *cc)
 			changed = true
 		}
 	}
@@ -161,6 +163,40 @@ func diffTable(from, to Table) *TableDiff {
 		return nil
 	}
 	return td
+}
+
+// diffColumn returns a ColumnChange if the two columns differ in type, nullability,
+// or default value. Returns nil when they are identical.
+func diffColumn(from, to Column) *ColumnChange {
+	cc := ColumnChange{Name: to.Name}
+	changed := false
+
+	if from.Type != to.Type {
+		cc.OldType = from.Type
+		cc.NewType = to.Type
+		changed = true
+	}
+
+	if from.Nullable != to.Nullable {
+		old, nw := from.Nullable, to.Nullable
+		cc.OldNullable = &old
+		cc.NewNullable = &nw
+		changed = true
+	}
+
+	defaultsEqual := (from.Default == nil && to.Default == nil) ||
+		(from.Default != nil && to.Default != nil && *from.Default == *to.Default)
+	if !defaultsEqual {
+		cc.DefaultChanged = true
+		cc.OldDefault = from.Default
+		cc.NewDefault = to.Default
+		changed = true
+	}
+
+	if !changed {
+		return nil
+	}
+	return &cc
 }
 
 func tableIndex(erd *ERD) map[string]Table {

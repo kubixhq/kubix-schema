@@ -31,13 +31,12 @@ func (h *Handler) ERD(w http.ResponseWriter, r *http.Request) {
 
 // GET /api/schema/migrations
 func (h *Handler) Migrations(w http.ResponseWriter, r *http.Request) {
-	tool := schema.DetectMigrationTool(h.db, h.cfg.MigrationTool)
-	history, err := schema.FetchMigrations(h.db, tool)
+	histories, err := schema.FetchAllMigrations(h.db, h.cfg.MigrationTool)
 	if err != nil {
 		h.handleDBError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, history)
+	writeJSON(w, http.StatusOK, histories)
 }
 
 // GET /api/schema/diff?from=v1&to=v2
@@ -72,8 +71,13 @@ func (h *Handler) handleDBError(w http.ResponseWriter, err error) {
 }
 
 func (h *Handler) handleSnapshotError(w http.ResponseWriter, err error) {
-	if strings.Contains(err.Error(), "snapshot not found") {
-		writeError(w, http.StatusNotFound, err.Error())
+	msg := err.Error()
+	if strings.Contains(msg, "snapshot not found") {
+		writeError(w, http.StatusNotFound, msg)
+		return
+	}
+	if strings.Contains(msg, "corrupt snapshot") {
+		writeError(w, http.StatusInternalServerError, msg)
 		return
 	}
 	h.handleDBError(w, err)

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -31,6 +32,20 @@ func Load() Config {
 		ServerPort:    serverPort,
 		SnapshotDir:   getEnv("SNAPSHOT_DIR", "./snapshots"),
 	}
+}
+
+// Validate returns an error for any config value that would cause a silent
+// misbehavior at runtime (invalid port, unknown migration tool).
+func (c Config) Validate() error {
+	if c.DBPort <= 0 || c.DBPort > 65535 {
+		return fmt.Errorf("DB_PORT must be a number between 1 and 65535 (got %q)", os.Getenv("DB_PORT"))
+	}
+	switch c.MigrationTool {
+	case "auto", "flyway", "liquibase", "prisma":
+	default:
+		return fmt.Errorf("MIGRATION_TOOL %q is invalid; must be one of: auto, flyway, liquibase, prisma", c.MigrationTool)
+	}
+	return nil
 }
 
 func getEnv(key, fallback string) string {

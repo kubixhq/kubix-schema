@@ -16,6 +16,62 @@ const (
 	ToolUnknown   Tool = "unknown"
 )
 
+// DetectAllMigrationTools returns every migration tool present in the database.
+// When hint names a specific tool it returns only that one (present or not).
+func DetectAllMigrationTools(db *sql.DB, hint string) []Tool {
+	if hint != "" && hint != "auto" {
+		return []Tool{Tool(hint)}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var tools []Tool
+	for _, candidate := range []struct {
+		tool  Tool
+		table string
+	}{
+		{ToolFlyway, "flyway_schema_history"},
+		{ToolLiquibase, "databasechangelog"},
+		{ToolPrisma, "_prisma_migrations"},
+	} {
+		var exists bool
+		_ = db.QueryRowContext(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM information_schema.tables
+				WHERE table_schema = 'public' AND table_name = $1
+			)
+		`, candidate.table).Scan(&exists)
+		if exists {
+			tools = append(tools, candidate.tool)
+		}
+	}
+	return tools
+}
+
+// FetchAllMigrations returns history for every detected migration tool.
+// Returns an empty slice (not an error) when no tool is found.
+// Returns an error when the database itself is unavailable.
+func FetchAllMigrations(db *sql.DB, hint string) ([]MigrationHistory, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		return nil, err
+	}
+	tools := DetectAllMigrationTools(db, hint)
+	if len(tools) == 0 {
+		return []MigrationHistory{}, nil
+	}
+	results := make([]MigrationHistory, 0, len(tools))
+	for _, tool := range tools {
+		h, err := FetchMigrations(db, tool)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, *h)
+	}
+	return results, nil
+}
+
 // DetectMigrationTool returns the tool specified by hint, or probes the DB when hint is "auto".
 func DetectMigrationTool(db *sql.DB, hint string) Tool {
 	if hint != "" && hint != "auto" {
