@@ -77,11 +77,11 @@ func TestExtractERD_AllDataTypes(t *testing.T) {
 		t.Errorf("expected 8 columns, got %d", len(tbl.Columns))
 	}
 	want := map[string]string{
-		"col_int":  "integer",
-		"col_text": "text",
+		"col_int":   "integer",
+		"col_text":  "text",
 		"col_jsonb": "jsonb",
-		"col_uuid": "uuid",
-		"col_bool": "boolean",
+		"col_uuid":  "uuid",
+		"col_bool":  "boolean",
 	}
 	for _, col := range tbl.Columns {
 		if expected, ok := want[col.Name]; ok && col.Type != expected {
