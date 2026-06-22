@@ -1,0 +1,11 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    uses: kubixhq/.github/.github/workflows/reusable-lint-go.yml@main
