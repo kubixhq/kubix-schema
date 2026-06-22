@@ -4,4 +4,4 @@ go 1.24
 
 toolchain go1.25.11
 
-require github.com/lib/pq v1.10.9
+require github.com/lib/pq v1.12.3
