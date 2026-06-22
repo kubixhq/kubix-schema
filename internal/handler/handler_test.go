@@ -71,7 +71,7 @@ func do(mux *http.ServeMux, method, path string) *httptest.ResponseRecorder {
 func errMsg(t *testing.T, rr *httptest.ResponseRecorder) string {
 	t.Helper()
 	var body struct{ Error string }
-	json.NewDecoder(rr.Body).Decode(&body)
+	_ = json.NewDecoder(rr.Body).Decode(&body)
 	return body.Error
 }
 

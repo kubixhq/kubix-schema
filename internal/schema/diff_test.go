@@ -354,7 +354,9 @@ func TestSaveSnapshot_ValidJSON(t *testing.T) {
 	erd := makeERD(
 		makeTable("users", []schema.Column{col("id", "integer", false), col("name", "text", true)}, []string{"id"}, nil),
 	)
-	schema.SaveSnapshot(erd, "v2", dir)
+	if err := schema.SaveSnapshot(erd, "v2", dir); err != nil {
+		t.Fatal(err)
+	}
 
 	data, _ := os.ReadFile(filepath.Join(dir, "v2.json"))
 	var parsed schema.ERD

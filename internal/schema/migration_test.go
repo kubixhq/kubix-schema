@@ -58,7 +58,7 @@ func TestDetectAllMigrationTools_Flyway(t *testing.T) {
 		t.Skip("flyway_schema_history already exists")
 	}
 	mustExec(t, db, flywayDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
 
 	tools := schema.DetectAllMigrationTools(db, "auto")
 	if len(tools) == 0 || tools[0] != schema.ToolFlyway {
@@ -72,7 +72,7 @@ func TestDetectAllMigrationTools_Liquibase(t *testing.T) {
 		t.Skip("databasechangelog already exists")
 	}
 	mustExec(t, db, liquibaseDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS databasechangelog") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS databasechangelog") })
 
 	tools := schema.DetectAllMigrationTools(db, "auto")
 	found := false
@@ -92,7 +92,7 @@ func TestDetectAllMigrationTools_Prisma(t *testing.T) {
 		t.Skip("_prisma_migrations already exists")
 	}
 	mustExec(t, db, prismaDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS _prisma_migrations") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS _prisma_migrations") })
 
 	tools := schema.DetectAllMigrationTools(db, "auto")
 	found := false
@@ -159,7 +159,7 @@ func TestFetchMigrations_Flyway_AllSuccess(t *testing.T) {
 		t.Skip("flyway_schema_history already exists")
 	}
 	mustExec(t, db, flywayDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
 
 	for _, row := range []struct {
 		rank int
@@ -194,7 +194,7 @@ func TestFetchMigrations_Flyway_WithFailed(t *testing.T) {
 		t.Skip("flyway_schema_history already exists")
 	}
 	mustExec(t, db, flywayDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
 
 	mustExec(t, db, `INSERT INTO flyway_schema_history VALUES (1,'1','init','SQL','V1.sql',NULL,'test',now(),10,true)`)
 	mustExec(t, db, `INSERT INTO flyway_schema_history VALUES (2,'2','bad','SQL','V2.sql',NULL,'test',now(),5,false)`)
@@ -211,7 +211,7 @@ func TestFetchMigrations_Flyway_VersionGaps(t *testing.T) {
 		t.Skip("flyway_schema_history already exists")
 	}
 	mustExec(t, db, flywayDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
 
 	mustExec(t, db, `INSERT INTO flyway_schema_history VALUES (1,'1','v1','SQL','V1.sql',NULL,'test',now(),10,true)`)
 	mustExec(t, db, `INSERT INTO flyway_schema_history VALUES (2,'2','v2','SQL','V2.sql',NULL,'test',now(),10,true)`)
@@ -233,7 +233,7 @@ func TestFetchMigrations_Flyway_Empty(t *testing.T) {
 		t.Skip("flyway_schema_history already exists")
 	}
 	mustExec(t, db, flywayDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
 
 	h, err := schema.FetchMigrations(db, schema.ToolFlyway)
 	if err != nil {
@@ -264,7 +264,7 @@ func TestFetchMigrations_Flyway_OutOfOrder(t *testing.T) {
 		t.Skip("flyway_schema_history already exists")
 	}
 	mustExec(t, db, flywayDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history") })
 
 	// inserted in reverse order but installed_rank determines final order
 	mustExec(t, db, `INSERT INTO flyway_schema_history VALUES (3,'3','v3','SQL','V3.sql',NULL,'test',now(),10,true)`)
@@ -288,7 +288,7 @@ func TestFetchMigrations_Liquibase_Normal(t *testing.T) {
 		t.Skip("databasechangelog already exists")
 	}
 	mustExec(t, db, liquibaseDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS databasechangelog") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS databasechangelog") })
 
 	mustExec(t, db, `INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum) VALUES ('1','dev','db.xml',now(),1,'EXECUTED','abc123')`)
 	mustExec(t, db, `INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype) VALUES ('2','dev','db.xml',now(),2,'EXECUTED')`)
@@ -325,7 +325,7 @@ func TestFetchMigrations_Liquibase_DuplicateRun(t *testing.T) {
 		t.Skip("databasechangelog already exists")
 	}
 	mustExec(t, db, liquibaseDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS databasechangelog") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS databasechangelog") })
 
 	mustExec(t, db, `INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype) VALUES ('1','dev','db.xml',now(),1,'EXECUTED')`)
 	mustExec(t, db, `INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype) VALUES ('1','dev','db.xml',now(),2,'RERAN')`)
@@ -347,7 +347,7 @@ func TestFetchMigrations_Prisma_Normal(t *testing.T) {
 		t.Skip("_prisma_migrations already exists")
 	}
 	mustExec(t, db, prismaDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS _prisma_migrations") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS _prisma_migrations") })
 
 	now := time.Now().UTC()
 	mustExec(t, db, fmt.Sprintf(`INSERT INTO _prisma_migrations (id,checksum,migration_name,started_at,finished_at,applied_steps_count) VALUES ('aaa','ccc','20240101_init','%s','%s',1)`,
@@ -385,7 +385,7 @@ func TestFetchMigrations_Prisma_RolledBack(t *testing.T) {
 		t.Skip("_prisma_migrations already exists")
 	}
 	mustExec(t, db, prismaDDL)
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS _prisma_migrations") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS _prisma_migrations") })
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	// finished_at is NULL → failed; rolled_back_at is set
