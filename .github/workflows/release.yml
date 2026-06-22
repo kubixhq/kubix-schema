@@ -7,6 +7,9 @@ on:
 
 jobs:
   release:
+    permissions:
+      contents: write
+      packages: write
     uses: kubixhq/.github/.github/workflows/reusable-release.yml@main
     with:
       image-name: kubix-schema
