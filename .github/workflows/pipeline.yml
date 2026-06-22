@@ -13,10 +13,14 @@ jobs:
   lint:
     if: github.event_name != 'schedule'
     uses: kubixhq/.github/.github/workflows/reusable-lint-go.yml@main
+    with:
+      go-version: "1.25"
 
   test:
     needs: lint
     uses: kubixhq/.github/.github/workflows/reusable-ci-go.yml@main
+    with:
+      go-version-matrix: '["1.24", "1.25"]'
 
   codeql:
     permissions:
