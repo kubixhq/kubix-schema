@@ -13,7 +13,6 @@ import (
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-func boolPtr(b bool) *bool    { return &b }
 func strPtr(s string) *string { return &s }
 
 func makeERD(tables ...schema.Table) *schema.ERD {
@@ -317,7 +316,9 @@ func TestLoadSnapshot_NotFound(t *testing.T) {
 
 func TestLoadSnapshot_CorruptedJSON(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "bad.json"), []byte("{not valid json"), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "bad.json"), []byte("{not valid json"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	_, err := schema.LoadSnapshot(nil, "bad", dir)
 	if err == nil {

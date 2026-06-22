@@ -158,7 +158,9 @@ func TestHandler_Diff_SnapshotNotFound(t *testing.T) {
 
 func TestHandler_Diff_CorruptedSnapshot_Returns500(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "bad.json"), []byte("{not valid json"), 0644)
+	if err := os.WriteFile(filepath.Join(dir, "bad.json"), []byte("{not valid json"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	mux := newMux(closedDB(t), dir)
 	rr := do(mux, "GET", "/api/schema/diff?from=bad&to=bad")
@@ -254,8 +256,12 @@ func TestHandler_Diff_IdenticalSnapshots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractERD: %v", err)
 	}
-	schema.SaveSnapshot(erd, "v1", dir)
-	schema.SaveSnapshot(erd, "v2", dir) // identical copy
+	if err := schema.SaveSnapshot(erd, "v1", dir); err != nil {
+		t.Fatal(err)
+	}
+	if err := schema.SaveSnapshot(erd, "v2", dir); err != nil { // identical copy
+		t.Fatal(err)
+	}
 
 	mux := newMux(db, dir)
 	rr := do(mux, "GET", "/api/schema/diff?from=v1&to=v2")
@@ -263,7 +269,9 @@ func TestHandler_Diff_IdenticalSnapshots(t *testing.T) {
 		t.Fatalf("got %d, want 200", rr.Code)
 	}
 	var d schema.SchemaDiff
-	json.NewDecoder(rr.Body).Decode(&d)
+	if err := json.NewDecoder(rr.Body).Decode(&d); err != nil {
+		t.Fatalf("response is not valid JSON: %v", err)
+	}
 	if len(d.Added)+len(d.Removed)+len(d.Modified) != 0 {
 		t.Errorf("identical snapshots should produce empty diff: %+v", d)
 	}
@@ -279,7 +287,9 @@ func TestHandler_Diff_CurrentKeyword(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExtractERD: %v", err)
 	}
-	schema.SaveSnapshot(erd, "baseline", dir)
+	if err := schema.SaveSnapshot(erd, "baseline", dir); err != nil {
+		t.Fatal(err)
+	}
 
 	mux := newMux(db, dir)
 	rr := do(mux, "GET", "/api/schema/diff?from=baseline&to=current")

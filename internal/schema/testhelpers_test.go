@@ -59,20 +59,20 @@ func mustExec(t *testing.T, db *sql.DB, query string) {
 }
 
 func dropTable(t *testing.T, db *sql.DB, name string) {
-	t.Cleanup(func() { db.Exec("DROP TABLE IF EXISTS " + name + " CASCADE") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS " + name + " CASCADE") })
 }
 
 func dropView(t *testing.T, db *sql.DB, name string) {
-	t.Cleanup(func() { db.Exec("DROP VIEW IF EXISTS " + name + " CASCADE") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP VIEW IF EXISTS " + name + " CASCADE") })
 }
 
 func dropSchema(t *testing.T, db *sql.DB, name string) {
-	t.Cleanup(func() { db.Exec("DROP SCHEMA IF EXISTS " + name + " CASCADE") })
+	t.Cleanup(func() { _, _ = db.Exec("DROP SCHEMA IF EXISTS " + name + " CASCADE") })
 }
 
 func tableExists(db *sql.DB, name string) bool {
 	var exists bool
-	db.QueryRow(`SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=$1)`, name).Scan(&exists)
+	_ = db.QueryRow(`SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=$1)`, name).Scan(&exists)
 	return exists
 }
 

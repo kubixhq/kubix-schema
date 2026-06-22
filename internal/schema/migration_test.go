@@ -125,8 +125,8 @@ func TestDetectAllMigrationTools_BothFlywayAndLiquibase(t *testing.T) {
 	mustExec(t, db, flywayDDL)
 	mustExec(t, db, liquibaseDDL)
 	t.Cleanup(func() {
-		db.Exec("DROP TABLE IF EXISTS flyway_schema_history")
-		db.Exec("DROP TABLE IF EXISTS databasechangelog")
+		_, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history")
+		_, _ = db.Exec("DROP TABLE IF EXISTS databasechangelog")
 	})
 
 	tools := schema.DetectAllMigrationTools(db, "auto")
@@ -424,8 +424,8 @@ func TestFetchAllMigrations_BothTools(t *testing.T) {
 	mustExec(t, db, flywayDDL)
 	mustExec(t, db, liquibaseDDL)
 	t.Cleanup(func() {
-		db.Exec("DROP TABLE IF EXISTS flyway_schema_history")
-		db.Exec("DROP TABLE IF EXISTS databasechangelog")
+		_, _ = db.Exec("DROP TABLE IF EXISTS flyway_schema_history")
+		_, _ = db.Exec("DROP TABLE IF EXISTS databasechangelog")
 	})
 
 	histories, err := schema.FetchAllMigrations(db, "auto")

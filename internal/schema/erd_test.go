@@ -13,7 +13,7 @@ import (
 func TestExtractERD_Empty(t *testing.T) {
 	db := testDB(t)
 	var count int
-	db.QueryRow(`SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`).Scan(&count)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`).Scan(&count)
 	if count > 0 {
 		t.Skipf("database has %d table(s); needs an empty public schema", count)
 	}
