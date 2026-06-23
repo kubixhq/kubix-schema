@@ -122,7 +122,10 @@ func FetchMigrations(db *sql.DB, tool Tool) (*MigrationHistory, error) {
 
 func fetchFlyway(ctx context.Context, db *sql.DB) (*MigrationHistory, error) {
 	rows, err := db.QueryContext(ctx, `
-		SELECT version, description, installed_on, success, checksum
+		SELECT version, description, installed_on, success, checksum,
+		       COALESCE(execution_time, 0),
+		       COALESCE(script, ''),
+		       COALESCE(installed_by, '')
 		FROM flyway_schema_history
 		ORDER BY installed_rank
 	`)
@@ -134,17 +137,21 @@ func fetchFlyway(ctx context.Context, db *sql.DB) (*MigrationHistory, error) {
 
 	var migrations []Migration
 	for rows.Next() {
-		var version, desc sql.NullString
+		var version, desc, script, installedBy sql.NullString
 		var appliedAt time.Time
 		var success bool
 		var checksum sql.NullInt64
-		if err := rows.Scan(&version, &desc, &appliedAt, &success, &checksum); err != nil {
+		var execTime int64
+		if err := rows.Scan(&version, &desc, &appliedAt, &success, &checksum, &execTime, &script, &installedBy); err != nil {
 			return nil, err
 		}
 		m := Migration{
-			Version:     version.String,
-			Description: desc.String,
-			AppliedAt:   appliedAt,
+			Version:       version.String,
+			Description:   desc.String,
+			AppliedAt:     appliedAt,
+			ExecutionTime: execTime,
+			Script:        script.String,
+			InstalledBy:   installedBy.String,
 		}
 		if success {
 			m.Status = "success"

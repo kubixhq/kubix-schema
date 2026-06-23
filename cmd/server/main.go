@@ -39,13 +39,32 @@ func main() {
 	h := handler.New(database, cfg)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 	mux.HandleFunc("GET /api/schema/erd", h.ERD)
 	mux.HandleFunc("GET /api/schema/migrations", h.Migrations)
 	mux.HandleFunc("GET /api/schema/diff", h.Diff)
+	mux.HandleFunc("GET /api/schema/snapshots", h.ListSnapshots)
+	mux.HandleFunc("POST /api/schema/snapshots", h.SaveSnapshot)
+	mux.HandleFunc("GET /api/schema/risk", h.Risk)
 
 	addr := fmt.Sprintf(":%d", cfg.ServerPort)
 	log.Printf("kubix-schema listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, cors(mux)); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func cors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

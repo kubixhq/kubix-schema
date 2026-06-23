@@ -27,11 +27,14 @@ type ERD struct {
 }
 
 type Migration struct {
-	Version     string    `json:"version"`
-	Description string    `json:"description"`
-	AppliedAt   time.Time `json:"applied_at"`
-	Status      string    `json:"status"` // "success" | "failed"
-	Checksum    *string   `json:"checksum,omitempty"`
+	Version       string    `json:"version"`
+	Description   string    `json:"description"`
+	AppliedAt     time.Time `json:"applied_at"`
+	Status        string    `json:"status"` // "success" | "failed"
+	Checksum      *string   `json:"checksum,omitempty"`
+	ExecutionTime int64     `json:"execution_time_ms"` // milliseconds
+	Script        string    `json:"script"`
+	InstalledBy   string    `json:"installed_by"`
 }
 
 type MigrationHistory struct {
